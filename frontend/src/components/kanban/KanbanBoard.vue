@@ -35,7 +35,6 @@ import EditCardModal from './EditCardModal.vue';
 export default {
     components: {
         KanbanColumn,
-        AddCardModal,
         EditCardModal,
     },
     props: {
