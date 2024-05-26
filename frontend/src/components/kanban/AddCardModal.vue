@@ -8,14 +8,14 @@
             <h2 class="text-lg font-bold mb-4">Нова картка</h2>
             
             <input
-                v-model="task.title"
+                v-model="card.title"
                 type="text"
                 placeholder="Назва картки"
                 class="border p-2 w-full mb-2"
             />
 
             <textarea
-                v-model="task.description"
+                v-model="card.description"
                 placeholder="Опис картки"
                 class="border p-2 w-full mb-2"
                 rows="3"
@@ -40,7 +40,7 @@
                 </div>
                 <div class="mt-2">
                     <span
-                        v-for="(tag, index) in task.tags"
+                        v-for="(tag, index) in card.tags"
                         :key="index"
                         class="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2"
                     >
@@ -62,8 +62,8 @@
             <div>
                 <label class="block mb-1">Прикріпіть файли:</label>
                 <input type="file" @change="handleFileUpload" multiple>
-                <ul v-if="task.attachments.length > 0" class="mt-2">
-                    <li v-for="(attachment, index) in task.attachments" :key="index" class="flex items-center mb-1">
+                <ul v-if="card.attachments.length > 0" class="mt-2">
+                    <li v-for="(attachment, index) in card.attachments" :key="index" class="flex items-center mb-1">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 mr-1">
                             <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
                         </svg>
@@ -76,7 +76,7 @@
             </div>
 
             <button
-                @click="addTask"
+                @click="addCard"
                 class="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
             >
                 Зберегти
@@ -93,7 +93,7 @@ export default {
     },
     data() {
         return {
-            task: {
+            card: {
                 title: '',
                 description: '',
                 tags: [],
@@ -103,15 +103,15 @@ export default {
         };
     },
     methods: {
-        async addTask() {
-            if (this.task.title.trim()) {
-                this.$emit('add-task', this.task)
-                this.resetTask()
+        async addCard() {
+            if (this.card.title.trim()) {
+                this.$emit('add-card', this.card)
+                this.resetCard()
                 this.$emit('update:show', false)
             }
         },
-        resetTask() {
-            this.task = {
+        resetCard() {
+            this.card = {
                 title: '',
                 description: '',
                 tags: [],
@@ -119,7 +119,7 @@ export default {
             };
         },
         closeModal() {
-            this.resetTask();
+            this.resetCard();
             this.$emit('update:show', false);
         },
         async handleFileUpload(event) {
@@ -128,9 +128,9 @@ export default {
                 const file = files[i]
                 const { status, json } = await uploadFile(file)
                 if (status === 201) {
-                    if (!this.task.attachments)
-                        this.task.attachments = [];
-                    this.task.attachments.push({
+                    if (!this.card.attachments)
+                        this.card.attachments = [];
+                    this.card.attachments.push({
                         filename: file.name,
                         fileID: json.id,
                     })
@@ -140,16 +140,16 @@ export default {
             }
         },
         deleteAttachment(index) {
-            this.task.attachments.splice(index, 1)
+            this.card.attachments.splice(index, 1)
         },
         addTag() {
             if (this.newTag.trim()) {
-                this.task.tags.push(this.newTag.trim());
+                this.card.tags.push(this.newTag.trim());
                 this.newTag = '';
             }
         },
         removeTag(index) {
-            this.task.tags.splice(index, 1);
+            this.card.tags.splice(index, 1);
         }
     }
 };

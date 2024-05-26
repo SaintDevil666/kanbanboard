@@ -1,5 +1,5 @@
 <template>
-    <button @click="showModal = true" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+    <button @click="showAddModal = true" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
         Додати нову картку
     </button>
     <div class="kanban-board">
@@ -11,23 +11,23 @@
                 :cards="filteredCards(status.name)"
                 @move-card="moveCard"
                 @reorder-card="reorderCard"
-                @open-details="showTaskDetails"
+                @open-details="openCardEdit"
                 @update-status-color="updateStatusColor"
             />
         </div>
 
-        <TaskModal
-            :show="showModal"
-            @update:show="showModal = false"
-            @add-task="addNewTask"
+        <AddCardModal
+            :show="showAddModal"
+            @update:show="showAddModal = false"
+            @add-card="addNewCard"
         />
 
-        <TaskDetailsModal
-            :show="showTaskModal"
-            :task="selectedTask"
-            @close="closeTaskDetails"
-            @delete-task="handleDelete"
-            @update-task="updateTask"
+        <EditCardModal
+            :show="showEditModal"
+            :card="selectedCard"
+            @close="closeCardEdit"
+            @delete-card="handleDelete"
+            @update-card="updateCard"
         />
     </div>
 </template>
@@ -36,14 +36,14 @@
 import { mapActions } from 'vuex'
 
 import KanbanColumn from './KanbanColumn.vue';
-import TaskModal from './TaskModal.vue';
-import TaskDetailsModal from './TaskDetailsModal.vue';
+import AddCardModal from './AddCardModal.vue';
+import EditCardModal from './EditCardModal.vue';
 
 export default {
     components: {
         KanbanColumn,
-        TaskModal,
-        TaskDetailsModal,
+        AddCardModal,
+        EditCardModal,
     },
     props: {
         boardId: {
@@ -61,9 +61,9 @@ export default {
     },
     data() {
         return {
-            showModal: false,
-            showTaskModal: false,
-            selectedTask: null,
+            showAddModal: false,
+            showEditModal: false,
+            selectedCard: null,
         };
     },
     methods: {
@@ -108,37 +108,37 @@ export default {
                 card.order = index;
             });
         },
-        addNewTask(task) {
-            const newTask = {
+        addNewCard(card) {
+            const newCard = {
                 id: Date.now(),
-                ...task,
+                ...card,
                 status: this.statuses[0].name,
                 order: this.filteredCards(this.statuses[0].name).length,
                 attachments: [],
             };
-            this.addCardToBoard({ boardId: this.boardId, card: newTask });
-            this.showModal = false;
+            this.addCardToBoard({ boardId: this.boardId, card: newCard });
+            this.showAddModal = false;
         },
-        showTaskDetails(task) {
-            this.selectedTask = task;
-            this.showTaskModal = true;
+        openCardEdit(card) {
+            this.selectedCard = card;
+            this.showEditModal = true;
         },
-        closeTaskDetails() {
-            this.selectedTask = null;
-            this.showTaskModal = false;
+        closeCardEdit() {
+            this.selectedCard = null;
+            this.showEditModal = false;
         },
-        async handleDelete(taskId) {
-            const index = this.cards.findIndex((card) => card.id === taskId);
+        async handleDelete(cardId) {
+            const index = this.cards.findIndex((card) => card.id === cardId);
             if (index !== -1) {
-                const deletedTask = this.cards[index];
-                this.deleteCardFromBoard({ boardId: this.boardId, card: deletedTask });
-                this.updateCardOrders(deletedTask.status);
-                this.showTaskModal = false;
-                this.selectedTask = null;
+                const deletedCard = this.cards[index];
+                this.deleteCardFromBoard({ boardId: this.boardId, card: deletedCard });
+                this.updateCardOrders(deletedCard.status);
+                this.showEditModal = false;
+                this.selectedCard = null;
             }
         },
-        async updateTask(updatedTask) {
-            this.updateCardOnBoard({ boardId: this.boardId, card: updatedTask});
+        async updateCard(updatedCard) {
+            this.updateCardOnBoard({ boardId: this.boardId, card: updatedCard});
         },
         updateStatusColor(statusName, newColor) {
             const status = this.statuses.find((status) => status.name === statusName);

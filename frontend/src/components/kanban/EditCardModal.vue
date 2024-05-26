@@ -7,9 +7,9 @@
 
       <div class="mt-8">
         <h3 class="text-lg font-semibold mb-2">
-          <input v-model="updatedTask.title" type="text" class="border p-2 w-full">
+          <input v-model="updatedCard.title" type="text" class="border p-2 w-full">
         </h3>
-        <textarea v-model="updatedTask.description" class="border p-2 w-full mb-4" rows="3"></textarea>
+        <textarea v-model="updatedCard.description" class="border p-2 w-full mb-4" rows="3"></textarea>
         
         <div class="mb-4">
           <label class="block mb-1">Теги:</label>
@@ -30,7 +30,7 @@
           </div>
           <div class="mt-2">
             <span
-              v-for="(tag, index) in updatedTask.tags"
+              v-for="(tag, index) in updatedCard.tags"
               :key="index"
               class="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2"
             >
@@ -52,7 +52,7 @@
         <div>
           <label class="block mb-1">Прикріплені файли:</label>
           <ul>
-            <li v-for="(attachment, index) in updatedTask.attachments" :key="index" class="mb-2 flex items-center">
+            <li v-for="(attachment, index) in updatedCard.attachments" :key="index" class="mb-2 flex items-center">
               <a @click="downloadAttachment(attachment.fileID, attachment.filename)" class="text-blue-500 hover:underline cursor-pointer">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 mr-1 inline-block">
                   <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
@@ -67,7 +67,7 @@
           <input type="file" @change="handleFileUpload" multiple class="mt-2">
         </div>
 
-      <button @click="deleteTask(task.id)" class="mt-4 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+      <button @click="deleteCard(card.id)" class="mt-4 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
         Видалити картку
       </button>
     </div>
@@ -81,7 +81,7 @@ import { mapActions } from 'vuex';
 export default {
   props: {
     show: Boolean,
-    task: Object
+    card: Object
   },
   data() {
     return {
@@ -89,17 +89,17 @@ export default {
     };
   },
   computed: {
-    updatedTask(){
-      return Object.assign({}, this.task);
+    updatedCard(){
+      return Object.assign({}, this.card);
     }
   },
   methods: {
     ...mapActions(['updateCardOnBoard', 'deleteCardFromBoard']),
-    deleteTask(taskId) {
-      this.$emit('delete-task', taskId);
+    deleteCard(cardId) {
+      this.$emit('delete-card', cardId);
     },
     emitUpdate(){
-      this.$emit('update-task', this.updatedTask);
+      this.$emit('update-card', this.updatedCard);
     },
     close() {
       this.emitUpdate();
@@ -117,7 +117,7 @@ export default {
       URL.revokeObjectURL(url);
     },
     deleteAttachment(index) {
-      this.updatedTask.attachment.splice(index, 1);
+      this.updatedCard.attachment.splice(index, 1);
       this.emitUpdate();
     },
     async handleFileUpload(event) {
@@ -126,7 +126,7 @@ export default {
         const file = files[i]
         const { status, json } = await uploadFile(file)
         if (status === 201) {
-          this.updatedTask.attachments.push({
+          this.updatedCard.attachments.push({
             filename: file.name,
             fileID: json.id,
           });
@@ -153,13 +153,13 @@ export default {
     },
     addTag() {
       if (this.newTag.trim()) {
-        this.updatedTask.tags.push(this.newTag.trim());
+        this.updatedCard.tags.push(this.newTag.trim());
         this.emitUpdate();
         this.newTag = '';
       }
     },
     removeTag(index) {
-      this.updatedTask.tags.splice(index, 1);
+      this.updatedCard.tags.splice(index, 1);
       this.emitUpdate();
     }
   },

@@ -58,51 +58,48 @@ export default {
     highlightedDates() {
       return this.boards
         .filter(board => board.date)
-        .map(board => new Date(board.date))
+        .map(board => new Date(board.date));
     },
     filteredBoards() {
-      let filtered = this.boards.filter(board => !board.date)
+      let filtered = this.boards.filter(board => !board.date);
       if (this.titleFilter) {
         filtered = filtered.filter(board =>
           board.title.toLowerCase().includes(this.titleFilter.toLowerCase())
         )
       }
       if (this.publicAccessFilter) {
-        filtered = filtered.filter(board => board.publicAccess)
+        filtered = filtered.filter(board => board.publicAccess);
       }
       if (this.createdByMeFilter) {
-        filtered = filtered.filter(board => board.creator.id === this.user.id)
+        filtered = filtered.filter(board => board.creator.id === this.user.id);
       }
       filtered.sort((a, b) => {
         if (this.sortOption === 'updatedAt') {
-          return new Date(b.updatedAt) - new Date(a.updatedAt)
+          return new Date(b.updatedAt) - new Date(a.updatedAt);
         } else if (this.sortOption === 'createdAt') {
-          return new Date(b.createdAt) - new Date(a.createdAt)
+          return new Date(b.createdAt) - new Date(a.createdAt);
         } else if (this.sortOption === 'title') {
-          return a.title.localeCompare(b.title)
+          return a.title.localeCompare(b.title);
         }
       })
-      return filtered
+      return filtered;
     },
   },
   methods: {
     ...mapActions(['fetchBoards', 'fetchBoard', 'createBoard']),
     formatDate(date) {
-      return moment(date).format('YYYY-MM-DD')
+      return moment(date).format('YYYY-MM-DD');
     },
     openBoardByDate(date) {
-      const formattedDate = this.formatDate(date)
-      const board = this.boards.find(board => board.date === formattedDate)
+      const formattedDate = this.formatDate(date);
+      const board = this.boards.find(board => board.date === formattedDate);
       if (board) {
-        this.$router.push(`/board/${board.id}`)
+        this.$router.push(`/board/${board.id}`);
       } else {
         this.fetchBoard(formattedDate)
           .then(board => {
-            this.$router.push(`/board/${board.id}`)
-          })
-          .catch(() => {
-            // Handle error if board not found
-          })
+            this.$router.push(`/board/${board.id}`);
+          });
       }
     },
     openBoard(id){
@@ -111,12 +108,12 @@ export default {
     async createNewBoard(){
       const board = await this.createBoard({});
       if (board && board.id){
-        this.$router.push(`/board/${board.id}`)
+        this.$router.push(`/board/${board.id}`);
       }
     }
   },
   created() {
-    this.fetchBoards()
+    this.fetchBoards();
   },
 }
 </script>
