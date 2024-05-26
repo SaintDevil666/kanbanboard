@@ -107,14 +107,18 @@ def get_board(board_id_or_date):
     
     if not board:
         return json_response({'message': 'Board not found'}, 404)
-    
-    cards = list(db.Cards.find({'boardID': board['_id']}))
 
-    board['cards'] = cards
+    cards = list(db.Cards.find({'boardID': board['_id']}))
+    card_ids = [card['_id'] for card in cards]
+    uploads = list(db.Uploads.find({'cardID': {'$in': card_ids}}, {'cardID': {'$toString': '$cardID'}, 'id': {'$toString': '$_id'}, 'name': '$filename'}))
+
     for card in cards:
         card['id'] = str(card.pop('_id'))
         del card['boardID']
 
+        card['attachments'] = [{'filename': upload['name'], 'fileID': upload['id']} for upload in uploads if upload['cardID'] == card['_id']]
+
+    board['cards'] = cards
     board['id'] = str(board.pop('_id'))
     
     creator = db.Users.find_one({'_id': board['creatorID']})
@@ -306,7 +310,6 @@ def update_board_cards(board_id):
             'title': card.get('title', ''),
             'description': card.get('description', ''),
             'tags': card.get('tags', []),
-            'attachments': card.get('attachments', []),
             'order': card.get('order', 0)
         }
         result = db.Cards.insert_one(card)
@@ -321,8 +324,7 @@ def update_board_cards(board_id):
             'status': card.get('status', board['statuses'][0]['name']),
             'title': card.get('title', ''),
             'description': card.get('description', ''),
-            'tags': card.get('tags', []),
-            'attachments': card.get('attachments', [])
+            'tags': card.get('tags', [])
         }
         db.Cards.update_one({'_id': ObjectId(card_id)}, {'$set': update_data})
     elif action == 'delete':
@@ -331,6 +333,7 @@ def update_board_cards(board_id):
             return json_response({'message': 'Missing card ID'}, 400)
         
         db.Cards.delete_one({'_id': ObjectId(card_id)})
+        db.Uploads.delete_many({'cardID': ObjectId(card_id)})        
 
     db.Boards.update_one({'_id': board_id}, {'$set': {'updatedAt': now}})
 

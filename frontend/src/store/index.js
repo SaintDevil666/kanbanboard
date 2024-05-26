@@ -71,6 +71,22 @@ const store = createStore({
             if (state.board.id === boardId) {
                 state.board.cards = state.board.cards.filter(c => c.id != card.id);
             }
+        },
+        ADD_FILE_TO_CARD(state, { boardId, cardId, file }) {
+            if (state.board.id === boardId) {
+                const card = state.board.cards.find(c => c.id === cardId);
+                if (card) {
+                    card.attachments.push(file);
+                }
+            }
+        },
+        REMOVE_FILE_FROM_CARD(state, { boardId, cardId, fileId }) {
+            if (state.board.id === boardId) {
+                const card = state.board.cards.find(c => c.id === cardId);
+                if (card) {
+                    card.attachments = card.attachments.filter(file => file.fileID !== fileId);
+                }
+            }
         }
     },
     actions: {
@@ -174,7 +190,8 @@ const store = createStore({
                 commit('REMOVE_BOARD_USER', { boardId, userId });
             }
         },
-        async addCardToBoard({ commit }, { boardId, card }){
+        async addCardToBoard({ commit }, { boardId, status }){
+            let card = { 'status': status, 'title': '', 'description': '', 'tags': [] }
             const response = await apiPATCH(`/boards/${boardId}/cards`, { 'action': 'add', 'card': card });
             if (response.status == 200){
                 card['id'] = response.json.cardId;
@@ -194,6 +211,20 @@ const store = createStore({
             if (response.status == 200){
                 commit('DELETE_CARD', { boardId, card });
                 return response.json;
+            }
+        },
+        async uploadFileToCard({ commit }, { boardId, cardId, file }) {
+            const formData = new FormData();
+            formData.append('file', file);
+            const response = await apiPOST(`/upload/${cardId}`, formData);
+            if (response.status === 201) {
+                commit('ADD_FILE_TO_CARD', { boardId, cardId, file: response.json });
+            }
+        },
+        async deleteFileFromCard({ commit }, { boardId, cardId, fileId }) {
+            const response = await apiDELETE(`/upload/${fileId}`);
+            if (response.status === 200) {
+                commit('REMOVE_FILE_FROM_CARD', { boardId, cardId, fileId });
             }
         }
     },

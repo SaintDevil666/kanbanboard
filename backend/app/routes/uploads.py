@@ -7,9 +7,11 @@ from utils import auth_required, json_response
 uploads_bp = Blueprint('uploads', __name__)
 
 
-@uploads_bp.route('', methods=['POST'])
+@uploads_bp.route('/<string:card_id>', methods=['POST'])
 @auth_required
 def upload_file():
+    if not ObjectId.is_valid(card_id):
+        return json_response({'message': 'Invalid card ID'}, 400)
     if 'file' not in request.files:
         return json_response({'message': 'No file uploaded'}, 400)
     file = request.files['file']
@@ -26,15 +28,20 @@ def upload_file():
     file_data = file.read()
 
     db = get_db()
+    card = db.Cards.find_one({'_id': ObjectId(card_id)})
+    if not card:
+        return json_response({'message': 'Card not found'}, 404)
+
     result = db.Uploads.insert_one({
         'filename': file.filename,
         'mimetype': file.content_type,
-        'data': file_data
+        'data': file_data,
+        'cardID': card['_id']
     })
 
     file_id = str(result.inserted_id)
 
-    return json_response({'id': file_id}, 201)
+    return json_response({'fileID': file_id, 'filename': file.filename}, 201)
 
 
 @uploads_bp.route('/<string:file_id>', methods=['GET'])
@@ -47,16 +54,6 @@ def get_file(file_id):
     
     db = get_db()
 
-    # card = db.Cards.find_one({'attachments.fileID': file_id})
-
-    # if not card:
-    #     return json_response({'message': 'File not found'}, 404)
-
-    # board = db.Boards.find_one({'_id': card['boardID'], '$or': [{'publicAccess': True}, {'creatorID': g.user['_id']}, {'invited': g.user['_id']}]})
-
-    # if not board:
-    #     return json_response({'message': 'File not found'}, 404)
-
     file_data = db.Uploads.find_one({'_id': file_id})
 
     if not file_data:
@@ -65,3 +62,18 @@ def get_file(file_id):
     file_content = BytesIO(file_data['data'])
     print(file_data)
     return send_file(file_content, mimetype=file_data['mimetype'], as_attachment=False, download_name=file_data['filename'])
+
+
+@uploads_bp.route('/<string:file_id>', methods=['DELETE'])
+@auth_required
+def delete_file(file_id):
+    if not ObjectId.is_valid(file_id):
+        return json_response({'message': 'Invalid file ID'}, 400)
+    
+    db = get_db()
+    result = db.Uploads.delete_one({'_id': ObjectId(file_id)})
+
+    if result.deleted_count == 0:
+        return json_response({'message': 'File not found'}, 404)
+
+    return json_response()

@@ -1,5 +1,5 @@
 <template>
-    <button @click="showAddModal = true" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+    <button @click="addNewCard" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
         Додати нову картку
     </button>
     <div class="kanban-board">
@@ -16,12 +16,6 @@
             />
         </div>
 
-        <AddCardModal
-            :show="showAddModal"
-            @update:show="showAddModal = false"
-            @add-card="addNewCard"
-        />
-
         <EditCardModal
             :show="showEditModal"
             :card="selectedCard"
@@ -36,7 +30,6 @@
 import { mapActions } from 'vuex'
 
 import KanbanColumn from './KanbanColumn.vue';
-import AddCardModal from './AddCardModal.vue';
 import EditCardModal from './EditCardModal.vue';
 
 export default {
@@ -108,16 +101,11 @@ export default {
                 card.order = index;
             });
         },
-        addNewCard(card) {
-            const newCard = {
-                id: Date.now(),
-                ...card,
-                status: this.statuses[0].name,
-                order: this.filteredCards(this.statuses[0].name).length,
-                attachments: [],
-            };
-            this.addCardToBoard({ boardId: this.boardId, card: newCard });
-            this.showAddModal = false;
+        async addNewCard() {
+            const response = await this.createCardOnBoard(this.boardId);
+            if (response && response.cardId) {
+                this.openCardEdit({ id: response.cardId });
+            }
         },
         openCardEdit(card) {
             this.selectedCard = card;
