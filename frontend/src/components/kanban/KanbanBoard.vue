@@ -1,23 +1,24 @@
 <template>
-    <button @click="addNewCard" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-        Додати нову картку
-    </button>
     <div class="kanban-board">
-        <div class="flex justify-around p-5 bg-gray-100 min-h-screen">
+        <div class="columns">
             <KanbanColumn
+                class="column"
                 v-for="status in statuses"
+                :boardId="boardId"
                 :key="status.name"
                 :status="status"
                 :cards="filteredCards(status.name)"
+                @add-card="addNewCard(status.name)"
                 @move-card="moveCard"
                 @reorder-card="reorderCard"
                 @open-details="openCardEdit"
-                @update-status-color="updateStatusColor"
+                @update-status="updateStatus"
+                @delete-status="deleteStatus"
             />
         </div>
 
         <EditCardModal
-            :show="showEditModal"
+            v-if="showEditModal"
             :card="selectedCard"
             @close="closeCardEdit"
             @delete-card="handleDelete"
@@ -59,25 +60,43 @@ export default {
         };
     },
     methods: {
-        ...mapActions(['addCardToBoard', 'updateCardOnBoard', 'deleteCardFromBoard']),
+        ...mapActions(['addCardToBoard', 'updateCardOnBoard', 'deleteCardFromBoard', 'updateBoardStatus', 'deleteBoardStatus']),
         filteredCards(statusName) {
             return this.cards
                 .filter((card) => card.status === statusName)
                 .sort((a, b) => a.order - b.order);
         },
-        moveCard(cardId, newStatus) {
-            let card = this.cards.find((card) => card.id === cardId);
-            if (card){
-                const oldStatus = card.status;
-                card.status = newStatus;
-                this.updateCardOnBoard({ boardId: this.boardId, card: card });
-                if (card) {
-                    card.status = newStatus;
-                    card.order = this.filteredCards(newStatus).length;
-                    this.updateCardOrders(oldStatus);
-                    this.updateCardOrders(newStatus);
-                }
-            }
+        async moveCard(cardId, newStatus) {
+          const card = this.cards.find((card) => card.id === cardId);
+          if (card) {
+            const oldStatus = card.status;
+            const oldOrder = card.order;
+            
+            // Видалення картки з попереднього статусу
+            this.cards = this.cards.filter((card) => card.id !== cardId);
+            
+            // Додавання картки в новий статус з оновленим order
+            card.status = newStatus;
+            card.order = this.getMaxOrder(newStatus) + 1;
+            this.cards.push(card);
+            
+            // Оновлення order карток в попередньому статусі
+            this.updateCardOrders(oldStatus, oldOrder);
+            
+            // Збереження змін в бекенді
+            await this.updateCardOnBoard({ boardId: this.boardId, card: card });
+          }
+        },
+
+        getMaxOrder(status) {
+          const cards = this.cards.filter((card) => card.status === status);
+          return cards.length > 0 ? Math.max(...cards.map((card) => card.order)) : 0;
+        },
+
+        updateCardOrders(status, removedOrder) {
+          this.cards
+            .filter((card) => card.status === status && card.order > removedOrder)
+            .forEach((card) => card.order--);
         },
         reorderCard(cardId, newOrder) {
             const card = this.cards.find((card) => card.id === cardId);
@@ -100,8 +119,8 @@ export default {
                 card.order = index;
             });
         },
-        async addNewCard() {
-            const response = await this.createCardOnBoard(this.boardId);
+        async addNewCard(status) {
+            const response = await this.addCardToBoard({ boardId: this.boardId, status: status });
             if (response && response.cardId) {
                 this.openCardEdit({ id: response.cardId });
             }
@@ -127,13 +146,53 @@ export default {
         async updateCard(updatedCard) {
             this.updateCardOnBoard({ boardId: this.boardId, card: updatedCard});
         },
-        updateStatusColor(statusName, newColor) {
-            const status = this.statuses.find((status) => status.name === statusName);
-            if (status) {
-                const oldColor = status.color;
-                status.color = newColor;
-            }
+        updateStatus(data) {
+          this.updateBoardStatus({
+            boardId: this.boardId,
+            statusName: data.statusName,
+            toStatusName: data.toStatusName,
+            toStatusColor: data.toStatusColor
+          });
+        },
+        deleteStatus(statusName) {
+          this.deleteBoardStatus({
+            boardId: this.boardId,
+            statusName: statusName
+          });
         }
     },
 };
 </script>
+
+<style scoped>
+    .kanban-board {
+        width: 100%;
+        background-color: transparent !important;
+    }
+
+    .columns {
+        display: flex;
+        height: 70svh;
+        justify-content: space-around;
+        width: 100%;
+    }
+    .columns::-webkit-scrollbar {
+        width: 5px; /* Width of the scrollbar */
+    }
+    .columns::-webkit-scrollbar-track {
+        background-color: #92c2f1c4; /* Color of the track */
+    }
+    .columns::-webkit-scrollbar-thumb {
+        background-color: #007bff; /* Color of the thumb */
+        border-radius: 10px; /* Roundness of the thumb */
+        border: 3px solid #f1f1f1; /* Padding around thumb */
+    }
+    .column {
+        width: 100%;
+    }
+    @media (max-width: 800px) {
+        .kanban-board {
+            width: 100%;
+        }
+    }
+</style>

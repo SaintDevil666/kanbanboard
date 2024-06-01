@@ -51,7 +51,7 @@ export default {
       // Реалізувати отримання об'єкта користувача за його ID
     },
     closeModal() {
-      this.$emit('close')
+      this.$emit('close');
     },
     async updatePublicAccess() {
       await this.updateBoardPublicAccess({ boardId: this.board.id, publicAccess: this.publicAccess })

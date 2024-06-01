@@ -1,5 +1,5 @@
 <template>
-    <div v-if="show" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
+    <div class="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center" @click.self="close">
         <div class="bg-white rounded-lg p-5 m-4 max-w-2xl max-h-full overflow-y-auto relative">
             <svg @click="close" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 absolute top-2 right-2 cursor-pointer">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -7,9 +7,9 @@
 
             <div class="mt-8">
                 <h3 class="text-lg font-semibold mb-2">
-                    <input v-model="updatedCard.title" type="text" class="border p-2 w-full">
+                    <input v-model="updatedCard.title" @input="emitUpdate()" placeholder="Назва картки" ref="cardTitle" type="text" class="border p-2 w-full">
                 </h3>
-                <textarea v-model="updatedCard.description" class="border p-2 w-full mb-4" rows="3"></textarea>
+                <textarea placeholder="Детальний опис" v-model="updatedCard.description" @input="emitUpdate()" class="border p-2 w-full mb-4" rows="3"></textarea>
                 
                 <div class="mb-4">
                     <label class="block mb-1">Теги:</label>
@@ -93,8 +93,11 @@ export default {
             return Object.assign({}, this.card);
         }
     },
+    mounted() {
+        this.$refs.cardTitle.focus();
+    },
     methods: {
-        ...mapActions(['updateCardOnBoard', 'deleteCardFromBoard']),
+        ...mapActions(['updateCardOnBoard', 'deleteCardFromBoard', 'uploadFileToCard', 'deleteFileFromCard']),
         deleteCard(cardId) {
             this.$emit('delete-card', cardId);
         },
@@ -102,7 +105,6 @@ export default {
             this.$emit('update-card', this.updatedCard);
         },
         close() {
-            this.emitUpdate();
             this.$emit('close');
         },
         downloadFile(file) {
@@ -127,12 +129,27 @@ export default {
             const files = event.target.files;
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
+                const base64 = await this.convertFileToBase64(file);
                 await this.uploadFileToCard({
                     boardId: this.boardId,
                     cardId: this.card.id,
-                    file: file,
+                    file: {
+                        filename: file.name,
+                        mimetype: file.type,
+                        data: base64
+                    }
                 });
             }
+            event.target.value = null;
+        },
+
+        async convertFileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = error => reject(error);
+            });
         },
         async downloadAttachment(fileID, filename) {
             const response = await downloadFile(fileID)
@@ -153,8 +170,8 @@ export default {
             if (this.newTag.trim()) {
                 this.updatedCard.tags.push(this.newTag.trim());
                 this.emitUpdate();
-                this.newTag = '';
             }
+            this.newTag = '';
         },
         removeTag(index) {
             this.updatedCard.tags.splice(index, 1);

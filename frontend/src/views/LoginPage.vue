@@ -3,13 +3,13 @@
     <div class="login-form">
       <form @submit.prevent="handleLogin">
         <div class="form-group">
-          <label for="email">E-mail</label>
-          <input type="email" id="email" v-model="email" @blur="validateEmail" required>
+          <!-- <label for="email">E-mail</label> -->
+          <input type="email" id="email" v-model="email" @blur="validateEmail" required placeholder="Електронна пошта">
           <div class="error" v-if="emailError">{{ emailError }}</div>
         </div>
         <div class="form-group">
-          <label for="password">Пароль</label>
-          <input type="password" id="password" v-model="password" @blur="validatePassword" required>
+          <!-- <label for="password">Пароль</label> -->
+          <input type="password" id="password" v-model="password" @blur="validatePassword" required placeholder="Пароль">
           <div class="error" v-if="passwordError">{{ passwordError }}</div>
         </div>
         <button type="submit">Вхід</button>
@@ -72,9 +72,16 @@ export default {
   width: 300px;
   padding: 20px;
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 10px;
+  background-color: white;
+  filter: drop-shadow(2px 2px 2px grey);
 }
-
+form {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
 .form-group {
   margin-bottom: 10px;
 }
@@ -100,8 +107,8 @@ input {
 }
 
 button {
-  width: 100%;
-  padding: 10px;
+  width: fit-content;
+  padding: 10px 20px;
   background-color: #007bff;
   color: #fff;
   border: none;

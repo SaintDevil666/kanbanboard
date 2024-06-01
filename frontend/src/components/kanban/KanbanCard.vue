@@ -1,6 +1,6 @@
 <template>
   <div
-    class="kanban-card bg-gray-100 rounded shadow p-3 mb-2 flex flex-col cursor-pointer"
+    class="kanban-card bg-gray-100 shadow p-3 mb-2 flex flex-col cursor-pointer"
     @click="$emit('open-details', card)"
   >
     <div>{{ card.title }}</div>
@@ -46,3 +46,8 @@ export default {
   },
 };
 </script>
+<style scoped>
+.kanban-card {
+  border-radius: 10px;
+}
+</style>

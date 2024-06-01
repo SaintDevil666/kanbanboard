@@ -1,17 +1,13 @@
 <template>
     <div id="app">
-        <header>
-            <div class="logo-container">
-                <div class="logo"><i>kanbanboard.click</i></div>
+        <nav style="display: flex; flex-direction: row; align-items: center; padding: 10px;">
+            <img @click="$router.push('/')" class="logo" src="@/assets/logo.png" alt="">
+            <div @click="openUserModal" class="user">
+                <img src="@/assets/user.svg" alt="">
             </div>
-            <div class="user-icon" v-if="isAuthenticated" @click="openUserModal">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="user-icon">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                </svg>
-            </div>
-        </header>
-        <router-view></router-view>
-        <user-modal v-if="showUserModal" @close="closeUserModal"></user-modal>
+        </nav>
+        <router-view class="router-view"/>
+        <user-modal v-if="showUserModal" @close="closeUserModal"/>
     </div>
 </template>
 
@@ -50,23 +46,63 @@ export default {
 </script>
 
 <style scoped>
-header {
-    height: 60px;
+#app {
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+  background-image: url(@/assets/background.jpg);
+  background-repeat: no-repeat;
+  background-size: cover;
+  height: 100vh;
+}
+
+nav {
+    margin-top: 10px;
+    margin-bottom: 10px;
     display: flex;
-    justify-content: space-between;
+    flex-direction: row;
     align-items: center;
-    background-color: #f0f0f0;
+    padding: 10px;
+    background-color: #f3f4f5;
+    border-radius: 10px;
+    width: 75%;
+    border: #1e5385 solid 1px;
+}
+
+.router-view {
+    width: 75%;
+    flex: 1;
+    overflow: hidden;
 }
 
 .logo {
-    font-size: 24px;
-    font-weight: bold;
-    margin: 10px;
+    height: 50px;
+    cursor: pointer;
 }
 
-.user-icon {
+.user {
+    margin-left: auto;
+    width: 40px;
+    height: 40px;
+    background-color: #33a3ff;
+    border-radius: 5px;
+    padding: 5px;
     cursor: pointer;
-    width:60px;
-    height: 60px;
+    transition: all 0.3s;
+    border: #1e5385 solid 1px;
+}
+
+.user:hover {
+    background-color: #3283a8d8;
+}
+
+
+@media (max-width: 600px) {
+    nav {
+        margin: 0;
+        width: 100%;
+        border-radius: 0;
+        margin-bottom: 10px;
+    }
 }
 </style>

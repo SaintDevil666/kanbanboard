@@ -44,9 +44,9 @@ def register():
         'joinedAt': datetime.datetime.now(),
         'settings': {
             'defaultStatuses': [
-                { "name": "To Do", "color": "#FF0000" },
-                { "name": "В роботі", "color": "#0000FF" },
-                { "name": "Виконано", "color": "#00FF00" }
+                { "name": "To Do", "color": "black.PNG" },
+                { "name": "В роботі", "color": "cyan.PNG" },
+                { "name": "Виконано", "color": "gray.PNG" }
             ]
         }
     }
@@ -169,7 +169,7 @@ def update_profile():
             return json_response({'message': 'Invalid defaultStatuses format'}, 400)
 
         for status in default_statuses:
-            if not isinstance(status, dict) or not isinstance(status.get('name'), str) or not isinstance(status.get('color'), str) or not len(status['color']) == 7:
+            if not isinstance(status, dict) or not isinstance(status.get('name'), str) or not isinstance(status.get('color'), str):
                 return json_response({'message': 'Invalid status'}, 400)
         print(default_statuses)
         update_data['settings.defaultStatuses'] = default_statuses

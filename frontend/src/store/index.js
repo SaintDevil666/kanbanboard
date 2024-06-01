@@ -17,6 +17,7 @@ const store = createStore({
             setToken(token)
         },
         SET_USER(state, user) {
+            if (user)
             state.user = user
         },
         CLEAR_USER(state) {
@@ -58,35 +59,48 @@ const store = createStore({
         },
         ADD_CARD(state, { boardId, card }){
             if (state.board.id === boardId) {
+                card['attachments'] = [];
                 state.board.cards.push(card);
             }
         },
         UPDATE_CARD(state, { boardId, card }){
             if (state.board.id === boardId) {
                 let i = state.board.cards.findIndex(c => c.id == card.id);
-                state.board.cards[i] = card;
+                state.board.cards[i] = Object.assign(state.board.cards[i], card);
             }
         },
         DELETE_CARD(state, { boardId, card }){
-            if (state.board.id === boardId) {
-                state.board.cards = state.board.cards.filter(c => c.id != card.id);
-            }
+            state.board.cards = state.board.cards.filter(c => c.id != card.id);
         },
         ADD_FILE_TO_CARD(state, { boardId, cardId, file }) {
-            if (state.board.id === boardId) {
-                const card = state.board.cards.find(c => c.id === cardId);
-                if (card) {
+            const card = state.board.cards.find(c => c.id === cardId);
+            if (card) {
+                console.log(card);
+                if (card.attachments)
                     card.attachments.push(file);
-                }
+                else
+                    card.attachments = [file];
             }
         },
         REMOVE_FILE_FROM_CARD(state, { boardId, cardId, fileId }) {
-            if (state.board.id === boardId) {
-                const card = state.board.cards.find(c => c.id === cardId);
-                if (card) {
-                    card.attachments = card.attachments.filter(file => file.fileID !== fileId);
-                }
+            const card = state.board.cards.find(c => c.id === cardId);
+            if (card) {
+                card.attachments = card.attachments.filter(file => file.fileID !== fileId);
             }
+        },
+        UPDATE_STATUS(state, { statusName, toStatusName, toStatusColor }) {
+            const status = state.board.statuses.find(status => status.name === statusName);
+            if (status) {
+              if (toStatusName) {
+                status.name = toStatusName;
+              }
+              if (toStatusColor) {
+                status.color = toStatusColor;
+              }
+            }
+        },
+        DELETE_STATUS(state, statusName) {
+            state.board.statuses = state.board.statuses.filter(status => status.name !== statusName);
         }
     },
     actions: {
@@ -119,9 +133,9 @@ const store = createStore({
         },
         async updateUserProfile({ commit, state }, { name, email, currentPassword, newPassword, settings }){
             let update = {};
-            if (name && name != state.user.name)
+            if (name)
                 update.name = name;
-            if (email && email != state.user.email)
+            if (email)
                 update.email = email;
             if (currentPassword && newPassword){
                 update.currentPassword = currentPassword;
@@ -129,6 +143,8 @@ const store = createStore({
             }
             if (settings)
                 update.settings = settings;
+
+            console.log(JSON.stringify(update, null, 2));
 
             const response = await apiPATCH('/profile', update)
             if (response.status == 200){
@@ -214,19 +230,37 @@ const store = createStore({
             }
         },
         async uploadFileToCard({ commit }, { boardId, cardId, file }) {
-            const formData = new FormData();
-            formData.append('file', file);
-            const response = await apiPOST(`/upload/${cardId}`, formData);
-            if (response.status === 201) {
-                commit('ADD_FILE_TO_CARD', { boardId, cardId, file: response.json });
-            }
+          const response = await apiPOST(`/upload/${cardId}`, { boardId, cardId, file });
+          if (response.status === 201) {
+            commit('ADD_FILE_TO_CARD', { boardId, cardId, file: response.json });
+          }
         },
         async deleteFileFromCard({ commit }, { boardId, cardId, fileId }) {
             const response = await apiDELETE(`/upload/${fileId}`);
             if (response.status === 200) {
                 commit('REMOVE_FILE_FROM_CARD', { boardId, cardId, fileId });
             }
-        }
+        },
+        async updateBoardStatus({ commit }, { boardId, statusName, toStatusName, toStatusColor }) {
+            const response = await apiPATCH(`/boards/${boardId}/status`, {
+              action: 'modify',
+              statusName,
+              toStatusName,
+              toStatusColor
+            });
+            if (response.status === 200) {
+              commit('UPDATE_STATUS', { statusName, toStatusName, toStatusColor });
+            }
+          },
+          async deleteBoardStatus({ commit }, { boardId, statusName }) {
+            const response = await apiPATCH(`/boards/${boardId}/status`, {
+              action: 'delete',
+              statusName
+            });
+            if (response.status === 200) {
+              commit('DELETE_STATUS', statusName);
+            }
+          }
     },
     getters: {
         isAuthenticated: state => !!state.token,

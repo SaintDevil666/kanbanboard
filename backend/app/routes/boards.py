@@ -114,9 +114,8 @@ def get_board(board_id_or_date):
 
     for card in cards:
         card['id'] = str(card.pop('_id'))
+        card['attachments'] = [{'filename': upload['name'], 'fileID': upload['id']} for upload in uploads if upload['cardID'] == card['id']]
         del card['boardID']
-
-        card['attachments'] = [{'filename': upload['name'], 'fileID': upload['id']} for upload in uploads if upload['cardID'] == card['_id']]
 
     board['cards'] = cards
     board['id'] = str(board.pop('_id'))
@@ -227,8 +226,8 @@ def update_board_statuses(board_id):
         db.Cards.delete_many({'boardID': board_id, 'status': status_name})
 
     elif action == 'modify':
-        to_status_name = data.get('toStatusName', '').strip()
-        to_status_color = data.get('toStatusColor', '').strip()
+        to_status_name = data.get('toStatusName', '')
+        to_status_color = data.get('toStatusColor', '')
         
         if not to_status_name and not to_status_color:
             return json_response({'message': 'Missing toStatusName and toStatusColor fields'}, 400)
@@ -244,7 +243,7 @@ def update_board_statuses(board_id):
             status['color'] = to_status_color
 
     elif action == 'add':
-        status_color = data.get('statusColor', '').strip()
+        status_color = data.get('statusColor', '')
         
         if not status_color:
             return json_response({'message': 'Missing statusColor field'}, 400)
@@ -320,17 +319,22 @@ def update_board_cards(board_id):
         if not card_id:
             return json_response({'message': 'Missing card ID'}, 400)
         
-        update_data = {
-            'status': card.get('status', board['statuses'][0]['name']),
-            'title': card.get('title', ''),
-            'description': card.get('description', ''),
-            'tags': card.get('tags', [])
-        }
-        db.Cards.update_one({'_id': ObjectId(card_id)}, {'$set': update_data})
+        update_data = {}
+        if 'status' in card:
+            update_data['status'] = card['status']
+        if 'title' in card:
+            update_data['title'] = card['title']
+        if 'description' in card:
+            update_data['description'] = card['description']
+        if 'tags' in card:
+            update_data['tags'] = card['tags']
+
+        if update_data:
+            db.Cards.update_one({'_id': ObjectId(card_id)}, {'$set': update_data})
     elif action == 'delete':
         card_id = card.get('id')
-        if not card_id:
-            return json_response({'message': 'Missing card ID'}, 400)
+        if not card_id or not ObjectId.is_valid(card_id):
+            return json_response({'message': 'Invalid card ID'}, 400)
         
         db.Cards.delete_one({'_id': ObjectId(card_id)})
         db.Uploads.delete_many({'cardID': ObjectId(card_id)})        

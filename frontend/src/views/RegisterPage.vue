@@ -3,22 +3,18 @@
     <div class="register-form">
       <form @submit.prevent="handleRegister">
         <div class="form-group">
-          <label for="name">Ім'я</label>
-          <input type="text" id="name" v-model="name" required>
+          <input type="text" id="name" v-model="name" required placeholder="Ім'я">
         </div>
         <div class="form-group">
-          <label for="email">E-mail</label>
-          <input type="email" id="email" v-model="email" @blur="validateEmail" required>
+          <input type="email" id="email" v-model="email" @blur="validateEmail" required placeholder="Електронна пошта">
           <div class="error" v-if="emailError">{{ emailError }}</div>
         </div>
         <div class="form-group">
-          <label for="password">Пароль</label>
-          <input type="password" id="password" v-model="password" @blur="validatePassword" required>
+          <input type="password" id="password" v-model="password" @blur="validatePassword" required placeholder="Пароль">
           <div class="error" v-if="passwordError">{{ passwordError }}</div>
         </div>
         <div class="form-group">
-          <label for="confirmPassword">Повторіть пароль</label>
-          <input type="password" id="confirmPassword" v-model="confirmPassword" @blur="validateConfirmPassword" required>
+          <input type="password" id="confirmPassword" v-model="confirmPassword" @blur="validateConfirmPassword" required placeholder="Повторіть пароль">
           <div class="error" v-if="confirmPasswordError">{{ confirmPasswordError }}</div>
         </div>
         <button type="submit">Зареєструватись</button>
@@ -52,6 +48,7 @@ export default {
         const response = await this.register({ name: this.name, email: this.email, password: this.password })
         if (response.status === 201) {
           this.$router.push('/')
+          location.reload()
         } else {
           // Handle registration error
         }
@@ -88,9 +85,16 @@ export default {
   width: 300px;
   padding: 20px;
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 10px;
+  filter: drop-shadow(2px 2px 2px grey);
+  background-color: white;
 }
-
+form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
 .form-group {
   margin-bottom: 10px;
 }
@@ -117,8 +121,8 @@ input {
 }
 
 button {
-  width: 100%;
-  padding: 10px;
+  width: fit-content;
+  padding: 10px 20px;
   background-color: #007bff;
   color: #fff;
   border: none;

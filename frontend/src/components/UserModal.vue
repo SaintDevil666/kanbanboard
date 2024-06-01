@@ -20,16 +20,21 @@
           <input type="password" id="newPassword" v-model="newPassword">
         </div>
         <div class="form-group">
-          <label for="defaultStatuses">Статуси в нових дошках за замовчуванням</label>
-          <div v-for="(status, index) in defaultStatuses" :key="index" class="status-item">
-            <input type="text" v-model="status.name" required>
-            <input type="color" v-model="status.color" required>
-            <button type="button" @click="removeStatus(index)">Видалити</button>
+          <label for="defaultStatuses"><b>Статуси в нових дошках за замовчуванням</b></label>
+          <div v-for="(status, index) in defaultStatuses" :key="index" style="display: flex; gap: 10px;"class="status-item">
+            <input style="max-width: 120px" placeholder="Ім'я" type="text" v-model="status.name" required>
+            <ColorPicker v-model="status.color"/>
+            <!-- <input type="color" v-model="status.color" required> -->
+            <button style="background-color: red;" type="button" @click="removeStatus(index)">
+              <img src="@/assets/trash.svg" alt="">
+            </button>
           </div>
-          <button type="button" @click="addStatus">Додати</button>
+          <button style="width: 100%; margin-top: 10px; display: flex; justify-content: center;" type="button" @click="addStatus">
+            <img src="@/assets/plus.svg" alt="">
+          </button>
         </div>
         <div class="submit-button">
-          <button type="submit"> Зберегти</button>
+          <button style="width: 100%; background-color: green" type="submit"> Зберегти</button>
         </div>
       </form>
     </div>
@@ -38,16 +43,33 @@
 
 <script>
 import { mapGetters, mapActions } from 'vuex'
+import ColorPicker from './ColorPicker.vue';
 
 export default {
   name: 'UserModal',
+  components: {
+    ColorPicker
+  },
   data() {
     return {
       name: '',
       email: '',
       currentPassword: '',
       newPassword: '',
-      defaultStatuses: []
+      defaultStatuses: [],
+      backgrounds: [
+          ["#000000", "black.PNG", "Чорний"],
+          ["#00FFFF", "cyan.PNG", "Морський"],
+          ["#808080", "gray.PNG", "Сірий"],
+          ["#008000", "green.PNG", "Зелений"],
+          ["#FFA500", "orange.PNG", "Оранжевий"],
+          ["#FFC0CB", "pink.PNG", "Рожевий"],
+          ["#800080", "purple.PNG", "Фіолетовий"],
+          ["#FF0000", "red.PNG", "Червоний"],
+          ["#FFCC99", "skin.PNG", "Шкіряний"],
+          ["#FFFFFF", "white.PNG", "Білий"],
+          ["#FFFF00", "yellow.PNG", "Жовтий"]
+      ]
     }
   },
   computed: {
@@ -56,10 +78,10 @@ export default {
   methods: {
     ...mapActions(['updateUserProfile']),
     closeModal() {
-      this.$emit('close')
+      this.$emit('close');
     },
     addStatus() {
-      this.defaultStatuses.push({ name: '', color: '#000000' })
+      this.defaultStatuses.push({ name: '', color: 'white' })
     },
     removeStatus(index) {
       this.defaultStatuses.splice(index, 1)
@@ -72,18 +94,22 @@ export default {
         newPassword: this.newPassword,
         settings: { defaultStatuses: this.defaultStatuses }
       }
-      const response = await this.updateUserProfile(settings)
+      const response = await this.updateUserProfile(settings) 
       if (response.status === 200) {
         this.closeModal()
       } else {
         // Handle update error
       }
+    },
+    print(e){
+      console.log(e.target.value);
     }
   },
   mounted() {
-    this.name = this.user?.name || ''
-    this.email = this.user?.email || ''
-    this.defaultStatuses = this.user?.settings?.defaultStatuses || []
+    this.name = this.user?.name || '';
+    this.email = this.user?.email || '';
+    this.defaultStatuses = this.user?.settings?.defaultStatuses || [];
+    console.log(this);
   }
 }
 </script>
@@ -99,6 +125,7 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 10001;
 }
 
 .modal-content {
